@@ -3,4 +3,4 @@ Verification is intended to assist the Chocolatey moderators and community
 in verifying that this package's contents are trustworthy.
 
 This package is published by a copyright holder of the extension software. The binaries are 
-identical to those in the NUnit.Extension.TeamCityEventListener nuget package.
+identical to those in the TeamCity.NUnit.EventListener nuget package.

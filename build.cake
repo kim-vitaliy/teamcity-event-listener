@@ -7,7 +7,7 @@
 
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Debug");
-var msbuildPath = @"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe";
+var msbuildPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe";
 
 // Special (optional) arguments for the script. You pass these
 // through the Cake bootscrap script via the -ScriptArgs argument
@@ -91,28 +91,28 @@ var TEST_ASSEMBLY = BIN_DIR + "teamcity-event-listener.tests.dll";
 var INTEGRATION_TEST_ASSEMBLY = BIN_CONFIG_DIR + "nunit.integration.tests.dll";
 
 // MetaData used in the nuget and chocolatey packages
-var GITHUB_SITE = "https://github.com/nunit/teamcity-event-listener";
-var WIKI_PAGE = "https://github.com/nunit/docs/wiki/Console-Command-Line";
+var GITHUB_SITE = "https://github.com/kim-vitaliy/teamcity-event-listener";
+// var WIKI_PAGE = "https://github.com/nunit/docs/wiki/Console-Command-Line";
 
-var NUGET_ID = "NUnit.Extension.TeamCityEventListener";
-var CHOCO_ID = "nunit-extension-teamcity-event-listener";
+var NUGET_ID = "TeamCity.NUnit.EventListener";
+// var CHOCO_ID = "nunit-extension-teamcity-event-listener";
 
-var TITLE = "NUnit 3 - Team City Event Listener Extension";
-var AUTHORS = new [] { "Charlie Poole", "Nikolay Pianikov" };
-var OWNERS = new [] { "Charlie Poole", "Nikolay Pianikov" };
+var TITLE = "TeamCity Event Listener Extension for NUnit";
+var AUTHORS = new [] { "jetbrains", "teamcity", "Charlie Poole", "Nikolay Pianikov" };
+var OWNERS = new [] { "jetbrains", "teamcity" };
 var DESCRIPTION = "This extension sends specially formatted messages about test progress to TeamCity as each test executes, allowing TeamCity to monitor progress.";
 var SUMMARY = "NUnit Team City Event Listener extension for TeamCity.";
 var COPYRIGHT = "Copyright (c) 2017 Charlie Poole";
-var RELEASE_NOTES = new [] { "See https://raw.githubusercontent.com/nunit/teamcity-event-listener/master/CHANGES.txt" };
+var RELEASE_NOTES = new [] { "See https://raw.githubusercontent.com/kim-vitaliy/teamcity-event-listener/master/CHANGES.txt" };
 var TAGS = new [] { "nunit", "test", "testing", "tdd", "runner" };
-var PROJECT_URL = new Uri("http://nunit.org");
-var ICON_URL = new Uri("https://cdn.rawgit.com/nunit/resources/master/images/icon/nunit_256.png");
-var LICENSE_URL = new Uri("http://nunit.org/nuget/nunit3-license.txt");
+var PROJECT_URL = new Uri("https://github.com/kim-vitaliy/teamcity-event-listener");
+var ICON_URL = new Uri("https://raw.githubusercontent.com/kim-vitaliy/teamcity-event-listener/refs/heads/master/icon.png");
+var LICENSE_URL = new Uri("https://github.com/kim-vitaliy/teamcity-event-listener/raw/master/LICENSE.txt");
 var PROJECT_SOURCE_URL = new Uri( GITHUB_SITE );
 var PACKAGE_SOURCE_URL = new Uri( GITHUB_SITE );
 var BUG_TRACKER_URL = new Uri(GITHUB_SITE + "/issues");
-var DOCS_URL = new Uri(WIKI_PAGE);
-var MAILING_LIST_URL = new Uri("https://groups.google.com/forum/#!forum/nunit-discuss");
+// var DOCS_URL = new Uri(WIKI_PAGE);
+// var MAILING_LIST_URL = new Uri("https://groups.google.com/forum/#!forum/nunit-discuss");
 
 // Package sources for nuget restore
 var PACKAGE_SOURCE = new string[]
@@ -400,49 +400,75 @@ Task("RePackageNuGet")
                 }
             });
     });
-
-Task("RePackageChocolatey")
-    .IsDependentOn("Build")
+    
+Task("RePackageNuGetWithZip")
+    .IsDependentOn("RePackageNuGet")
     .Does(() =>
     {
-        CreateDirectory(PACKAGE_DIR);
+        var zipOutputPath = System.IO.Path.Combine(PACKAGE_DIR, "TeamCity.NUnit.EventListener.zip");
+        var zipRootDir = System.IO.Path.Combine(PACKAGE_DIR, "temp_zip_root");
 
-        ChocolateyPack(
-            new ChocolateyPackSettings()
-            {
-                Id = CHOCO_ID,
-                Version = chocoVersion ?? packageVersion,
-                Title = TITLE,
-                Authors = AUTHORS,
-                Owners = OWNERS,
-                Description = DESCRIPTION,
-                Summary = SUMMARY,
-                ProjectUrl = PROJECT_URL,
-                IconUrl = ICON_URL,
-                LicenseUrl = LICENSE_URL,
-                RequireLicenseAcceptance = false,
-                Copyright = COPYRIGHT,
-                ProjectSourceUrl = PROJECT_SOURCE_URL,
-                DocsUrl= DOCS_URL,
-                BugTrackerUrl = BUG_TRACKER_URL,
-                PackageSourceUrl = PACKAGE_SOURCE_URL,
-                MailingListUrl = MAILING_LIST_URL,
-                ReleaseNotes = RELEASE_NOTES,
-                Tags = TAGS,
-                //Language = "en-US",
-                OutputDirectory = PACKAGE_DIR,
-                Files = new [] {
-                    new ChocolateyNuSpecContent { Source = PROJECT_DIR + "LICENSE.txt", Target = "tools" },
-                    new ChocolateyNuSpecContent { Source = PROJECT_DIR + "CHANGES.txt", Target = "tools" },
-                    new ChocolateyNuSpecContent { Source = PROJECT_DIR + "VERIFICATION.txt", Target = "tools" },
-                    new ChocolateyNuSpecContent { Source = PROJECT_DIR + ".addins", Target = "tools" },
-                    new ChocolateyNuSpecContent { Source = BIN_SRC + "net20/teamcity-event-listener.dll", Target = "tools/net20" },
-                    new ChocolateyNuSpecContent { Source = BIN_SRC + "net20/nunit.engine.api.dll", Target = "tools/net20" },
-                    new ChocolateyNuSpecContent { Source = BIN_SRC + "netstandard2.0/teamcity-event-listener.dll", Target = "tools/netstandard2.0" },
-                    new ChocolateyNuSpecContent { Source = BIN_SRC + "netstandard2.0/nunit.engine.api.dll", Target = "tools/netstandard2.0" }
-                }
-            });
+        var eventListenerDir = System.IO.Path.Combine(zipRootDir, "teamcity-nunit-event-listener");
+        var net20Dir = System.IO.Path.Combine(eventListenerDir, "net20");
+        var netStandard20Dir = System.IO.Path.Combine(eventListenerDir, "netstandard2.0");
+
+        CleanDirectory(zipRootDir);
+        CreateDirectory(zipRootDir);
+        CreateDirectory(eventListenerDir);
+        CreateDirectory(net20Dir);
+        CreateDirectory(netStandard20Dir);
+
+        CopyFileToDirectory(BIN_SRC + "net20/teamcity-event-listener.dll", net20Dir);
+        CopyFileToDirectory(BIN_SRC + "net20/nunit.engine.api.dll", net20Dir);
+        CopyFileToDirectory(BIN_SRC + "netstandard2.0/teamcity-event-listener.dll", netStandard20Dir);
+        CopyFileToDirectory(BIN_SRC + "netstandard2.0/nunit.engine.api.dll", netStandard20Dir);
+
+        Information($"Creating ZIP: {zipOutputPath}");
+        Zip(zipRootDir, zipOutputPath);
     });
+
+// Task("RePackageChocolatey")
+//     .IsDependentOn("Build")
+//     .Does(() =>
+//     {
+//         CreateDirectory(PACKAGE_DIR);
+// 
+//         ChocolateyPack(
+//             new ChocolateyPackSettings()
+//             {
+//                 Id = CHOCO_ID,
+//                 Version = chocoVersion ?? packageVersion,
+//                 Title = TITLE,
+//                 Authors = AUTHORS,
+//                 Owners = OWNERS,
+//                 Description = DESCRIPTION,
+//                 Summary = SUMMARY,
+//                 ProjectUrl = PROJECT_URL,
+//                 IconUrl = ICON_URL,
+//                 LicenseUrl = LICENSE_URL,
+//                 RequireLicenseAcceptance = false,
+//                 Copyright = COPYRIGHT,
+//                 ProjectSourceUrl = PROJECT_SOURCE_URL,
+//                 DocsUrl= DOCS_URL,
+//                 BugTrackerUrl = BUG_TRACKER_URL,
+//                 PackageSourceUrl = PACKAGE_SOURCE_URL,
+//                 MailingListUrl = MAILING_LIST_URL,
+//                 ReleaseNotes = RELEASE_NOTES,
+//                 Tags = TAGS,
+//                 //Language = "en-US",
+//                 OutputDirectory = PACKAGE_DIR,
+//                 Files = new [] {
+//                     new ChocolateyNuSpecContent { Source = PROJECT_DIR + "LICENSE.txt", Target = "tools" },
+//                     new ChocolateyNuSpecContent { Source = PROJECT_DIR + "CHANGES.txt", Target = "tools" },
+//                     new ChocolateyNuSpecContent { Source = PROJECT_DIR + "VERIFICATION.txt", Target = "tools" },
+//                     new ChocolateyNuSpecContent { Source = PROJECT_DIR + ".addins", Target = "tools" },
+//                     new ChocolateyNuSpecContent { Source = BIN_SRC + "net20/teamcity-event-listener.dll", Target = "tools/net20" },
+//                     new ChocolateyNuSpecContent { Source = BIN_SRC + "net20/nunit.engine.api.dll", Target = "tools/net20" },
+//                     new ChocolateyNuSpecContent { Source = BIN_SRC + "netstandard2.0/teamcity-event-listener.dll", Target = "tools/netstandard2.0" },
+//                     new ChocolateyNuSpecContent { Source = BIN_SRC + "netstandard2.0/nunit.engine.api.dll", Target = "tools/netstandard2.0" }
+//                 }
+//             });
+//     });
 
 //////////////////////////////////////////////////////////////////////
 // TASK TARGETS
@@ -470,8 +496,8 @@ Task("Package")
     .IsDependentOn("RePackage");
 
 Task("RePackage")
-    .IsDependentOn("RePackageNuGet")
-    .IsDependentOn("RePackageChocolatey");
+    .IsDependentOn("RePackageNuGet");
+//     .IsDependentOn("RePackageChocolatey");
 
 Task("Travis")
     .IsDependentOn("Build")
