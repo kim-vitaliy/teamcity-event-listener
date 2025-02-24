@@ -1,4 +1,8 @@
-﻿teamcity-event-listener 1.0.9 - Oct 07, 2023
+﻿teamcity-event-listener 1.0.10 - Mar 11, 2025
+
+ * Transfer of ownership for teamcity-event-listener from NUnit to JetBrains
+
+teamcity-event-listener 1.0.9 - Oct 07, 2023
 
 Issues Resolved
 
