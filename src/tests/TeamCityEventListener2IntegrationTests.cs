@@ -26,7 +26,7 @@ namespace NUnit.Engine.Listeners
     using System;
     using System.IO;
     using System.Text;
-    using Extensibility;
+    using NUnit.Extensibility;
     using Framework;
 
     [TestFixture]

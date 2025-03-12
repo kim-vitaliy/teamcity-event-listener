@@ -22,7 +22,7 @@ var binaries = Argument("binaries", (string)null);
 // SET PACKAGE VERSION
 //////////////////////////////////////////////////////////////////////
 
-var version = "1.0.10";
+var version = "1.1.0";
 var modifier = "";
 
 // Tuple(NUnit.Console version, NUnit version)
@@ -60,7 +60,7 @@ if (BuildSystem.IsRunningOnAppVeyor)
 //////////////////////////////////////////////////////////////////////
 
 // Directories
-var TARGET_FRAMEWORK = "net20";
+var TARGET_FRAMEWORK = "net462";
 var PROJECT_DIR = Context.Environment.WorkingDirectory.FullPath + "/";
 var PACKAGE_DIR = PROJECT_DIR + "package/";
 var TOOLS_DIR = PROJECT_DIR + "tools/";
@@ -388,9 +388,9 @@ Task("RePackageNuGet")
                 Files = new [] {
                     new NuSpecContent { Source = PROJECT_DIR + "LICENSE.txt" },
                     new NuSpecContent { Source = PROJECT_DIR + "CHANGES.txt" },
-                    new NuSpecContent { Source = PROJECT_DIR + ".addins", Target = "tools" },
-                    new NuSpecContent { Source = BIN_SRC + "net20/teamcity-event-listener.dll", Target = "tools/net20" },
-                    new NuSpecContent { Source = BIN_SRC + "net20/nunit.engine.api.dll", Target = "tools/net20" },
+                    new NuSpecContent { Source = PROJECT_DIR + "teamcity-event-listener.addins", Target = "tools" },
+                    new NuSpecContent { Source = BIN_SRC + "net462/teamcity-event-listener.dll", Target = "tools/net462" },
+                    new NuSpecContent { Source = BIN_SRC + "net462/nunit.engine.api.dll", Target = "tools/net462" },
                     new NuSpecContent { Source = BIN_SRC + "netstandard2.0/teamcity-event-listener.dll", Target = "tools/netstandard2.0" },
                     new NuSpecContent { Source = BIN_SRC + "netstandard2.0/nunit.engine.api.dll", Target = "tools/netstandard2.0" }
                 }
@@ -428,9 +428,9 @@ Task("RePackageChocolatey")
                     new ChocolateyNuSpecContent { Source = PROJECT_DIR + "LICENSE.txt", Target = "tools" },
                     new ChocolateyNuSpecContent { Source = PROJECT_DIR + "CHANGES.txt", Target = "tools" },
                     new ChocolateyNuSpecContent { Source = PROJECT_DIR + "VERIFICATION.txt", Target = "tools" },
-                    new ChocolateyNuSpecContent { Source = PROJECT_DIR + ".addins", Target = "tools" },
-                    new ChocolateyNuSpecContent { Source = BIN_SRC + "net20/teamcity-event-listener.dll", Target = "tools/net20" },
-                    new ChocolateyNuSpecContent { Source = BIN_SRC + "net20/nunit.engine.api.dll", Target = "tools/net20" },
+                    new ChocolateyNuSpecContent { Source = PROJECT_DIR + "teamcity-event-listener.addins", Target = "tools" },
+                    new ChocolateyNuSpecContent { Source = BIN_SRC + "net462/teamcity-event-listener.dll", Target = "tools/net462" },
+                    new ChocolateyNuSpecContent { Source = BIN_SRC + "net462/nunit.engine.api.dll", Target = "tools/net462" },
                     new ChocolateyNuSpecContent { Source = BIN_SRC + "netstandard2.0/teamcity-event-listener.dll", Target = "tools/netstandard2.0" },
                     new ChocolateyNuSpecContent { Source = BIN_SRC + "netstandard2.0/nunit.engine.api.dll", Target = "tools/netstandard2.0" }
                 }
@@ -445,18 +445,18 @@ Task("RePackageZip")
 
         var eventListenerDir = System.IO.Path.Combine(zipRootDir, "NUnit.Extension.TeamCityEventListener");
         var toolsDir = System.IO.Path.Combine(eventListenerDir, "tools");
-        var net20Dir = System.IO.Path.Combine(toolsDir, "net20");
+        var net462Dir = System.IO.Path.Combine(toolsDir, "net462");
         var netStandard20Dir = System.IO.Path.Combine(toolsDir, "netstandard2.0");
 
         CleanDirectory(zipRootDir);
         CreateDirectory(zipRootDir);
         CreateDirectory(eventListenerDir);
         CreateDirectory(toolsDir);
-        CreateDirectory(net20Dir);
+        CreateDirectory(net462Dir);
         CreateDirectory(netStandard20Dir);
 
-        CopyFileToDirectory(BIN_SRC + "net20/teamcity-event-listener.dll", net20Dir);
-        CopyFileToDirectory(BIN_SRC + "net20/nunit.engine.api.dll", net20Dir);
+        CopyFileToDirectory(BIN_SRC + "net462/teamcity-event-listener.dll", net462Dir);
+        CopyFileToDirectory(BIN_SRC + "net462/nunit.engine.api.dll", net462Dir);
         CopyFileToDirectory(BIN_SRC + "netstandard2.0/teamcity-event-listener.dll", netStandard20Dir);
         CopyFileToDirectory(BIN_SRC + "netstandard2.0/nunit.engine.api.dll", netStandard20Dir);
 
